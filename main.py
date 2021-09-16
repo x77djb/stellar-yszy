@@ -402,6 +402,11 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         self.loading()
         self.getMediaList()
         self.loading(True)
+    
+    def on_xl_click(self, page, listControl, item, itemControl):
+        if len(self.allmovidesdata[page]['allmovies']) > item:
+            self.allmovidesdata[page]['actmovies'] = self.allmovidesdata[page]['allmovies'][item]
+        self.player.updateControlValue(page,'movielist',self.allmovidesdata[page]['actmovies'])
                 
     def on_movieurl_click(self, page, listControl, item, itemControl):
         if len(self.allmovidesdata[page]['actmovies']) > item:
