@@ -21,6 +21,7 @@ spy = [
         {'name':'快播资源','api':'http://www.kuaibozy.com/api.php/provide/vod/','datatype':'json','search':False},
         {'name':'豆瓣资源','api':'https://api.dbyunzy.com/api.php/provide/vod/','datatype':'json','search':True},
         {'name':'飞鱼资源','api':'https://app.feiyu5.com/api.php/provide/vod/','datatype':'json','search':True},
+        {'name':'快云资源','api':'http://www.kuaibozy.com/api.php/provide/vod/','datatype':'json','search':False},
     ]
 
 class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
@@ -57,7 +58,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
     def makeLayout(self):
         mainmenulist = []
         for cat in spy:
-            mainmenulist.append({'type':'link','name':cat['name'],'@click':'onMainMenuClick','width':80})
+            mainmenulist.append({'type':'link','name':cat['name'],'@click':'onMainMenuClick','width':70})
         secmenu_layout = [
             {'type':'link','name':'title','@click':'onSecMenuClick'}
         ]
@@ -134,7 +135,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         self.mediaclass = []
         url = self.apiurl + '?ac=list'
         print(url)
-        res = requests.get(url,timeout = 3,verify=False)
+        res = requests.get(url,timeout = 5,verify=False)
         if res.status_code == 200:
             if self.apitype == 'json':
                 jsondata = json.loads(res.text, strict = False)
@@ -217,6 +218,8 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         self.lastpg = '&pg=' + str(self.pagenumbers)
         self.cur_page = '第' + str(self.pageindex) + '页'
         self.max_page = '共' + str(self.pagenumbers) + '页'
+        print('pagenumbers:' + str(self.pagenumbers))
+        print('pageindex:' + str(self.pageindex))
     
     def getPageInfoXML(self,bs):
         self.nextpg = ''
@@ -229,8 +232,6 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         if selector:
             self.pageindex = int(selector[0].get('page'))
             self.pagenumbers = int(selector[0].get('pagecount'))
-            self.cur_page = '第' + str(self.pageindex) + '页'
-            self.max_page = '共' + str(self.pagenumbers) + '页'
             if self.pageindex < self.pagenumbers:
                 self.nextpg = '&pg=' + str(int(self.pageindex) + 1)
             else:
@@ -241,6 +242,12 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
                 self.previouspg = '&pg=' + str(int(self.pageindex) - 1)
             self.firstpg = '&pg=1'
             self.lastpg = '&pg=' + str(self.pagenumbers)
+        self.cur_page = '第' + str(self.pageindex) + '页'
+        self.max_page = '共' + str(self.pagenumbers) + '页'
+        print('pagenumbers:' + str(self.pagenumbers))
+        print('pageindex:' + str(self.pageindex))
+
+
     
     def onSearch(self, *args):
         search_word = self.player.getControlValue('main','search_edit').strip()
@@ -292,7 +299,6 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
                                     urllist.append({'title':jjinfo[0],'url':jjinfo[1]})
                                 sourcelist.append({'flag':playfromlist[i],'medias':urllist})
                         mediainfo = {'name':info['vod_name'],'pic':info['vod_pic'],'actor':'演员:' + info['vod_actor'].strip(),'content':'简介:' + info['vod_content'].strip(),'source':sourcelist}
-                        self.getPageInfoJson(jsondata)
                         self.createMediaFrame(mediainfo)
                         return
             else:
@@ -326,7 +332,6 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
                                 n = n + 1
                             sourcelist.append({'flag':ddflag,'medias':m3u8list})
                     mediainfo = {'name':name,'pic':pic,'actor':actor,'content':des,'source':sourcelist}
-                    self.getPageInfoXML(bs)
                     self.createMediaFrame(mediainfo)
                     return
         self.player and self.player.toast('main','无法获取视频信息')
@@ -365,7 +370,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
             },
             {'type':'space','height':5},
             {'group':
-                {'type':'grid','name':'movielist','itemlayout':movie_list_layout,'value':actmovies,'separator':True,'itemheight':30,'itemwidth':60},
+                {'type':'grid','name':'movielist','itemlayout':movie_list_layout,'value':actmovies,'separator':True,'itemheight':30,'itemwidth':120},
                 'height':200
             }
         ]
@@ -420,6 +425,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
     def loading(self, stopLoading = False):
         if hasattr(self.player,'loadingAnimation'):
             self.player.loadingAnimation('main', stop=stopLoading)
+        print(self.max_page)
         
 def newPlugin(player:StellarPlayer.IStellarPlayer,*arg):
     plugin = dyxsplugin(player)
