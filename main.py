@@ -10,18 +10,32 @@ import json
 import urllib3
 
 spy = [
-        {'name':'88电影资源','api':'http://www.88zy.live/inc/api.php/provide/vod/','datatype':'xml','search':False},
-        {'name':'百度资源','api':'https://m3u8.apibdzy.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'name':'八戒资源','api':'http://cj.bajiecaiji.com/inc/api.php/provide/vod/','datatype':'xml','search':False},
-        {'name':'穿梭资源','api':'https://ok.888hyk.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'name':'天空资源','api':'http://api.tiankongapi.com/api.php/provide/vod/','datatype':'json','search':False},
-        #{'name':'新奇遇资源','api':'https://www.newqiy.com/api.php/provide/vod/','datatype':'json','search':False},
-        {'name':'太初电影','api':'https://www.tcdya.com/api.php/provide/vod/','datatype':'json','search':False},
-        {'name':'免费影院','api':'http://www.ruiuri.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'name':'快播资源','api':'http://www.kuaibozy.com/api.php/provide/vod/','datatype':'json','search':False},
-        {'name':'豆瓣资源','api':'https://api.dbyunzy.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'name':'飞鱼资源','api':'https://app.feiyu5.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'name':'快云资源','api':'http://www.kuaibozy.com/api.php/provide/vod/','datatype':'json','search':False},
+        {'title':'88资源','api':'http://www.88zy.live/inc/api.php/provide/vod/','datatype':'xml','search':False},
+        {'title':'百度资源','api':'https://m3u8.apibdzy.com/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'八戒资源','api':'http://cj.bajiecaiji.com/inc/api.php/provide/vod/','datatype':'xml','search':False},
+        {'title':'穿梭资源','api':'https://ok.888hyk.com/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'天空资源','api':'http://api.tiankongapi.com/api.php/provide/vod/','datatype':'json','search':False},
+        #{'title':'新奇遇资源','api':'https://www.newqiy.com/api.php/provide/vod/','datatype':'json','search':False},
+        {'title':'太初电影','api':'https://www.tcdya.com/api.php/provide/vod/','datatype':'json','search':False},
+        {'title':'免费影院','api':'http://www.ruiuri.com/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'快播资源','api':'http://www.kuaibozy.com/api.php/provide/vod/','datatype':'json','search':False},
+        {'title':'豆瓣资源','api':'https://api.dbyunzy.com/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'飞鱼资源','api':'https://app.feiyu5.com/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'快云资源','api':'http://www.kuaibozy.com/api.php/provide/vod/','datatype':'json','search':False},
+        {'title':'红牛资源','api':'https://www.hongniuzy1.com/inc/apijson_vodhnm3u8.php/provide/vod/','datatype':'json','search':False},
+        {'title':'不开门','api':'http://c.bukai.men/api.php/provide/vod','datatype':'json','search':True},
+        {'title':'电影牛','api':'https://www.dianyingn.com/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'kk看剧','api':'http://www.kkkanju.com/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'极品影视','api':'https://www.jpysvip.net/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'北斗星','api':'https://v8.bdxzyapi.com/inc/api.php/provide/vod/','datatype':'xml','search':False},
+        {'title':'安逸影院','api':'http://dy.51isu.com:11801/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'飘花电影','api':'http://www.2mjtt.com/inc/api.php/provide/vod/','datatype':'xml','search':False},
+        {'title':'爪可可影视','api':'https://www.zwcoco.com/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'39看','api':'https://www.39kan.com/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'云播','api':'http://bxin.tv/api.php/provide/vod/','datatype':'json','search':True},
+        #{'title':'播放呀','api':'https://www.bofangya.com/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'淘影TV','api':'http://tv.4kvod.com/api.php/provide/vod/','datatype':'json','search':True},
+        {'title':'新女神','api':'http://cms.tvbox543.com:80/api.php/provide/vod/','datatype':'json','search':True},
     ]
 
 class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
@@ -53,12 +67,12 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
     
     def show(self):
         controls = self.makeLayout()
-        self.doModal('main',800,600,'',controls)        
+        self.doModal('main',800,700,'',controls)        
     
     def makeLayout(self):
-        mainmenulist = []
-        for cat in spy:
-            mainmenulist.append({'type':'link','name':cat['name'],'@click':'onMainMenuClick','width':70})
+        zywz_layout = [
+            {'type':'link','name':'title','@click':'onMainMenuClick'}
+        ]
         secmenu_layout = [
             {'type':'link','name':'title','@click':'onSecMenuClick'}
         ]
@@ -88,9 +102,9 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
                 'height':30
             },
             {'type':'space','height':10},
-            {'group':mainmenulist,'height':30},
+            {'type':'grid','name':'zygrid','itemlayout':zywz_layout,'value':spy,'itemheight':30,'itemwidth':80,'height':70},
             {'type':'space','height':5},
-            {'type':'grid','name':'mediaclassgrid','itemlayout':mediaclass_layout,'value':self.mediaclass,'itemheight':30,'itemwidth':80,'height':70},
+            {'type':'grid','name':'mediaclassgrid','itemlayout':mediaclass_layout,'value':self.mediaclass,'itemheight':30,'itemwidth':80,'height':80},
             {'type':'space','height':5},
             {'type':'grid','name':'mediagrid','itemlayout':mediagrid_layout,'value':self.medias,'separator':True,'itemheight':240,'itemwidth':150},
             {'group':
@@ -115,22 +129,18 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         ]
         return controls
     
-    def onMainMenuClick(self,pageId,control,*args):
+    def onMainMenuClick(self, page, listControl, item, itemControl):
         self.loading()
-        self.apiurl = ''
-        apidatatype = ''
-        for cat in spy:
-            if control == cat['name']:
-                self.apiurl = cat['api']
-                self.apitype = cat['datatype']
-                self.getMediaType()
-                self.pg = ''
-                self.wd = ''
-                self.tid = ''
-                self.getMediaList()
-                break
-        self.loading(True)    
-            
+        cat = spy[item]
+        self.apiurl = cat['api']
+        self.apitype = cat['datatype']
+        self.getMediaType()
+        self.pg = ''
+        self.wd = ''
+        self.tid = ''
+        self.getMediaList()
+        self.loading(True)
+         
     def getMediaType(self):
         self.mediaclass = []
         url = self.apiurl + '?ac=list'
@@ -410,13 +420,12 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
     
     def on_xl_click(self, page, listControl, item, itemControl):
         if len(self.allmovidesdata[page]['allmovies']) > item:
-            self.allmovidesdata[page]['actmovies'] = self.allmovidesdata[page]['allmovies'][item]
+            self.allmovidesdata[page]['actmovies'] = self.allmovidesdata[page]['allmovies'][item]['medias']
         self.player.updateControlValue(page,'movielist',self.allmovidesdata[page]['actmovies'])
                 
     def on_movieurl_click(self, page, listControl, item, itemControl):
         if len(self.allmovidesdata[page]['actmovies']) > item:
             playurl = self.allmovidesdata[page]['actmovies'][item]['url']
-            print(playurl)
             self.player.play(playurl)
             
     def playMovieUrl(self,playpageurl):
