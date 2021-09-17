@@ -145,23 +145,26 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         self.mediaclass = []
         url = self.apiurl + '?ac=list'
         print(url)
-        res = requests.get(url,timeout = 5,verify=False)
-        if res.status_code == 200:
-            if self.apitype == 'json':
-                jsondata = json.loads(res.text, strict = False)
-                if jsondata:
-                    self.mediaclass = jsondata['class']
-                    self.getPageInfoJson(jsondata)
+        try:
+            res = requests.get(url,timeout = 5,verify=False)
+            if res.status_code == 200:
+                if self.apitype == 'json':
+                    jsondata = json.loads(res.text, strict = False)
+                    if jsondata:
+                        self.mediaclass = jsondata['class']
+                        self.getPageInfoJson(jsondata)
+                else:
+                    bs = bs4.BeautifulSoup(res.content.decode('UTF-8','ignore'),'html.parser')
+                    selector = bs.select('rss > class >ty')
+                    if selector:
+                        for item in selector:
+                            t_id = int(item.get('id'))
+                            t_name = item.string
+                            self.mediaclass.append({'type_id':t_id,'type_name':t_name})
+                        self.getPageInfoXML(bs)
             else:
-                bs = bs4.BeautifulSoup(res.content.decode('UTF-8','ignore'),'html.parser')
-                selector = bs.select('rss > class >ty')
-                if selector:
-                    for item in selector:
-                        t_id = int(item.get('id'))
-                        t_name = item.string
-                        self.mediaclass.append({'type_id':t_id,'type_name':t_name})
-                    self.getPageInfoXML(bs)
-        else:
+                self.player and self.player.toast('main','请求失败')
+        except:
             self.player and self.player.toast('main','请求失败')
         self.player.updateControlValue('main','mediaclassgrid',self.mediaclass)
         
@@ -178,30 +181,33 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         if self.pg != '':
             url = url + self.pg
         print(url)
-        res = requests.get(url,timeout = 5,verify=False)
-        if res.status_code == 200:
-            if self.apitype == 'json':
-                jsondata = json.loads(res.text, strict = False)
-                if jsondata:
-                    jsonlist = jsondata['list']
-                    for item in jsonlist:
-                        self.medias.append({'ids':item['vod_id'],'title':item['vod_name'],'picture':item['vod_pic']})
-                    self.getPageInfoJson(jsondata)
+        try:
+            res = requests.get(url,timeout = 5,verify=False)
+            if res.status_code == 200:
+                if self.apitype == 'json':
+                    jsondata = json.loads(res.text, strict = False)
+                    if jsondata:
+                        jsonlist = jsondata['list']
+                        for item in jsonlist:
+                            self.medias.append({'ids':item['vod_id'],'title':item['vod_name'],'picture':item['vod_pic']})
+                        self.getPageInfoJson(jsondata)
+                else:
+                    bs = bs4.BeautifulSoup(res.content.decode('UTF-8','ignore'),'html.parser')
+                    selector = bs.select('rss > list > video')
+                    if selector:
+                        for item in selector:
+                            nameinfo = item.select('name')
+                            picinfo = item.select('pic')
+                            idsinfo = item.select('id')
+                            if nameinfo and picinfo and idsinfo:
+                                name = nameinfo[0].string
+                                pic = picinfo[0].string
+                                ids = int(idsinfo[0].string)
+                                self.medias.append({'ids':ids,'title':name,'picture':pic})
+                    self.getPageInfoXML(bs)
             else:
-                bs = bs4.BeautifulSoup(res.content.decode('UTF-8','ignore'),'html.parser')
-                selector = bs.select('rss > list > video')
-                if selector:
-                    for item in selector:
-                        nameinfo = item.select('name')
-                        picinfo = item.select('pic')
-                        idsinfo = item.select('id')
-                        if nameinfo and picinfo and idsinfo:
-                            name = nameinfo[0].string
-                            pic = picinfo[0].string
-                            ids = int(idsinfo[0].string)
-                            self.medias.append({'ids':ids,'title':name,'picture':pic})
-                self.getPageInfoXML(bs)
-        else:
+                self.player and self.player.toast('main','请求失败')
+        except:
             self.player and self.player.toast('main','请求失败')
         self.player.updateControlValue('main','mediagrid',self.medias)
     
@@ -284,66 +290,69 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         self.onGetMediaPage(url)
         
     def onGetMediaPage(self,url):
-        res = requests.get(url,timeout = 5,verify=False)
-        if res.status_code == 200:
-            if self.apitype == 'json':
-                jsondata = json.loads(res.text, strict = False)
-                if jsondata:
-                    medialist = jsondata['list']
-                    if len(medialist) > 0:
-                        info = medialist[0]
-                        playfrom = info["vod_play_from"]
-                        playnote = '$$$'
-                        playfromlist = playfrom.split(playnote)
-                        playurl = info["vod_play_url"]
-                        playurllist = playurl.split(playnote)
-                        sourcelen = len(playfromlist)
+        try:
+            res = requests.get(url,timeout = 5,verify=False)
+            if res.status_code == 200:
+                if self.apitype == 'json':
+                    jsondata = json.loads(res.text, strict = False)
+                    if jsondata:
+                        medialist = jsondata['list']
+                        if len(medialist) > 0:
+                            info = medialist[0]
+                            playfrom = info["vod_play_from"]
+                            playnote = '$$$'
+                            playfromlist = playfrom.split(playnote)
+                            playurl = info["vod_play_url"]
+                            playurllist = playurl.split(playnote)
+                            sourcelen = len(playfromlist)
+                            sourcelist = []
+                            for i in range(sourcelen):
+                                if playfromlist[i].find('m3u8') >= 0:
+                                    urllist = [] 
+                                    urlstr = playurllist[i]
+                                    jjlist = urlstr.split('#')
+                                    for jj in jjlist:
+                                        jjinfo = jj.split('$')
+                                        urllist.append({'title':jjinfo[0],'url':jjinfo[1]})
+                                    sourcelist.append({'flag':playfromlist[i],'medias':urllist})
+                            mediainfo = {'name':info['vod_name'],'pic':info['vod_pic'],'actor':'演员:' + info['vod_actor'].strip(),'content':'简介:' + info['vod_content'].strip(),'source':sourcelist}
+                            self.createMediaFrame(mediainfo)
+                            return
+                else:
+                    bs = bs4.BeautifulSoup(res.content.decode('UTF-8','ignore'),'html.parser')
+                    selector = bs.select('rss > list > video')
+                    if len(selector) > 0:
+                        info = selector[0]
+                        nameinfo = info.select('name')[0]
+                        name = nameinfo.text
+                        picinfo = info.select('pic')[0]
+                        pic = picinfo.text
+                        actorinfo = info.select('actor')[0]
+                        actor = '演员:' + actorinfo.text.strip()
+                        desinfo = info.select('des')[0]
+                        des = '简介:' + desinfo.text.strip()
+                        dds = info.select('dl > dd')
                         sourcelist = []
-                        for i in range(sourcelen):
-                            if playfromlist[i].find('m3u8') >= 0:
-                                urllist = [] 
-                                urlstr = playurllist[i]
-                                jjlist = urlstr.split('#')
-                                for jj in jjlist:
-                                    jjinfo = jj.split('$')
-                                    urllist.append({'title':jjinfo[0],'url':jjinfo[1]})
-                                sourcelist.append({'flag':playfromlist[i],'medias':urllist})
-                        mediainfo = {'name':info['vod_name'],'pic':info['vod_pic'],'actor':'演员:' + info['vod_actor'].strip(),'content':'简介:' + info['vod_content'].strip(),'source':sourcelist}
+                        for dd in dds:
+                            ddflag = dd.get('flag')
+                            ddinfo = dd.text
+                            m3u8list = []
+                            if ddflag.find('m3u8') >= 0:
+                                urllist = ddinfo.split('#')
+                                n = 1
+                                for source in urllist:
+                                    urlinfo = source.split('$')
+                                    if len(urlinfo) == 1:
+                                        m3u8list.append({'title':'第' + str(n) + '集','url':ddinfo})
+                                    else:
+                                        m3u8list.append({'title':urlinfo[0],'url':urlinfo[1]})
+                                    n = n + 1
+                                sourcelist.append({'flag':ddflag,'medias':m3u8list})
+                        mediainfo = {'name':name,'pic':pic,'actor':actor,'content':des,'source':sourcelist}
                         self.createMediaFrame(mediainfo)
                         return
-            else:
-                bs = bs4.BeautifulSoup(res.content.decode('UTF-8','ignore'),'html.parser')
-                selector = bs.select('rss > list > video')
-                if len(selector) > 0:
-                    info = selector[0]
-                    nameinfo = info.select('name')[0]
-                    name = nameinfo.text
-                    picinfo = info.select('pic')[0]
-                    pic = picinfo.text
-                    actorinfo = info.select('actor')[0]
-                    actor = '演员:' + actorinfo.text.strip()
-                    desinfo = info.select('des')[0]
-                    des = '简介:' + desinfo.text.strip()
-                    dds = info.select('dl > dd')
-                    sourcelist = []
-                    for dd in dds:
-                        ddflag = dd.get('flag')
-                        ddinfo = dd.text
-                        m3u8list = []
-                        if ddflag.find('m3u8') >= 0:
-                            urllist = ddinfo.split('#')
-                            n = 1
-                            for source in urllist:
-                                urlinfo = source.split('$')
-                                if len(urlinfo) == 1:
-                                    m3u8list.append({'title':'第' + str(n) + '集','url':ddinfo})
-                                else:
-                                    m3u8list.append({'title':urlinfo[0],'url':urlinfo[1]})
-                                n = n + 1
-                            sourcelist.append({'flag':ddflag,'medias':m3u8list})
-                    mediainfo = {'name':name,'pic':pic,'actor':actor,'content':des,'source':sourcelist}
-                    self.createMediaFrame(mediainfo)
-                    return
+        except:
+            self.player and self.player.toast('main','请求失败')
         self.player and self.player.toast('main','无法获取视频信息')
         return
         
