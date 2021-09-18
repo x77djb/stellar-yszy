@@ -8,35 +8,8 @@ import urllib.request
 import math
 import json
 import urllib3
-
-spy = [
-        {'title':'88资源','api':'http://www.88zy.live/inc/api.php/provide/vod/','datatype':'xml','search':False},
-        {'title':'百度资源','api':'https://m3u8.apibdzy.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'八戒资源','api':'http://cj.bajiecaiji.com/inc/api.php/provide/vod/','datatype':'xml','search':False},
-        {'title':'穿梭资源','api':'https://ok.888hyk.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'天空资源','api':'http://api.tiankongapi.com/api.php/provide/vod/','datatype':'json','search':False},
-        #{'title':'新奇遇资源','api':'https://www.newqiy.com/api.php/provide/vod/','datatype':'json','search':False},
-        {'title':'太初电影','api':'https://www.tcdya.com/api.php/provide/vod/','datatype':'json','search':False},
-        {'title':'免费影院','api':'http://www.ruiuri.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'快播资源','api':'http://www.kuaibozy.com/api.php/provide/vod/','datatype':'json','search':False},
-        {'title':'豆瓣资源','api':'https://api.dbyunzy.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'飞鱼资源','api':'https://app.feiyu5.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'快云资源','api':'http://www.kuaibozy.com/api.php/provide/vod/','datatype':'json','search':False},
-        {'title':'红牛资源','api':'https://www.hongniuzy1.com/inc/apijson_vodhnm3u8.php/provide/vod/','datatype':'json','search':False},
-        {'title':'不开门','api':'http://c.bukai.men/api.php/provide/vod','datatype':'json','search':True},
-        {'title':'电影牛','api':'https://www.dianyingn.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'kk看剧','api':'http://www.kkkanju.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'极品影视','api':'https://www.jpysvip.net/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'北斗星','api':'https://v8.bdxzyapi.com/inc/api.php/provide/vod/','datatype':'xml','search':False},
-        {'title':'安逸影院','api':'http://dy.51isu.com:11801/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'飘花电影','api':'http://www.2mjtt.com/inc/api.php/provide/vod/','datatype':'xml','search':False},
-        {'title':'爪可可影视','api':'https://www.zwcoco.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'39看','api':'https://www.39kan.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'云播','api':'http://bxin.tv/api.php/provide/vod/','datatype':'json','search':True},
-        #{'title':'播放呀','api':'https://www.bofangya.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'淘影TV','api':'http://tv.4kvod.com/api.php/provide/vod/','datatype':'json','search':True},
-        {'title':'新女神','api':'http://cms.tvbox543.com:80/api.php/provide/vod/','datatype':'json','search':True},
-    ]
+import os
+import sys
 
 class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
     def __init__(self,player:StellarPlayer.IStellarPlayer):
@@ -59,9 +32,27 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         self.wd = ''
         self.ids = ''
         self.tid = ''
+        self.spy = []
     
     def start(self):
         super().start()
+        path = os.path.split(os.path.realpath(__file__))[0]
+        print(path)
+        for root, dirs, files in os.walk(path): 
+            for file in files:
+                filenames = os.path.splitext(file)
+                if os.path.splitext(file)[1] == '.json':  # 想要保存的文件格式
+                    self.resolveJson(path + '\\' + file) 
+        
+        
+    def resolveJson(self,path):
+        print('===========')
+        print(path)
+        print('===========')
+        file = open(path, "rb")
+        fileJson = json.loads(file.read())
+        for item in fileJson:
+            self.spy.append(item)
         
     
     
@@ -102,7 +93,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
                 'height':30
             },
             {'type':'space','height':10},
-            {'type':'grid','name':'zygrid','itemlayout':zywz_layout,'value':spy,'itemheight':30,'itemwidth':80,'height':70},
+            {'type':'grid','name':'zygrid','itemlayout':zywz_layout,'value':self.spy,'itemheight':30,'itemwidth':80,'height':70},
             {'type':'space','height':5},
             {'type':'grid','name':'mediaclassgrid','itemlayout':mediaclass_layout,'value':self.mediaclass,'itemheight':30,'itemwidth':80,'height':80},
             {'type':'space','height':5},
@@ -131,7 +122,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
     
     def onMainMenuClick(self, page, listControl, item, itemControl):
         self.loading()
-        cat = spy[item]
+        cat = self.spy[item]
         self.apiurl = cat['api']
         self.apitype = cat['datatype']
         self.getMediaType()
@@ -273,7 +264,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         if self.apiurl == '':
             self.player.toast("main","请先选择资源站")
             return
-        for cat in spy:
+        for cat in self.spy:
             if self.apiurl == cat['api']:
                 if cat['search'] == False:
                     self.player.toast('main','该资源站不支持搜索')
