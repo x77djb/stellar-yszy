@@ -37,7 +37,6 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
     def start(self):
         super().start()
         path = os.path.split(os.path.realpath(__file__))[0]
-        print(path)
         for root, dirs, files in os.walk(path): 
             for file in files:
                 filenames = os.path.splitext(file)
@@ -45,11 +44,8 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
                     self.resolveJson(path + '\\' + file) 
         
         
-    def resolveJson(self,path):
-        print('===========')
-        print(path)
-        print('===========')
-        file = open(path, "rb")
+    def resolveJson(self,file):
+        file = open(file, "rb")
         fileJson = json.loads(file.read())
         for item in fileJson:
             self.spy.append(item)
@@ -135,7 +131,6 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
     def getMediaType(self):
         self.mediaclass = []
         url = self.apiurl + '?ac=list'
-        print(url)
         try:
             res = requests.get(url,timeout = 5,verify=False)
             if res.status_code == 200:
@@ -171,7 +166,6 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
             url = url + self.tid
         if self.pg != '':
             url = url + self.pg
-        print(url)
         try:
             res = requests.get(url,timeout = 5,verify=False)
             if res.status_code == 200:
@@ -224,10 +218,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         self.firstpg = '&pg=1'
         self.lastpg = '&pg=' + str(self.pagenumbers)
         self.cur_page = '第' + str(self.pageindex) + '页'
-        self.max_page = '共' + str(self.pagenumbers) + '页'
-        print('pagenumbers:' + str(self.pagenumbers))
-        print('pageindex:' + str(self.pageindex))
-    
+        self.max_page = '共' + str(self.pagenumbers) + '页'    
     def getPageInfoXML(self,bs):
         self.nextpg = ''
         self.previouspg = ''
@@ -251,10 +242,6 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
             self.lastpg = '&pg=' + str(self.pagenumbers)
         self.cur_page = '第' + str(self.pageindex) + '页'
         self.max_page = '共' + str(self.pagenumbers) + '页'
-        print('pagenumbers:' + str(self.pagenumbers))
-        print('pageindex:' + str(self.pageindex))
-
-
     
     def onSearch(self, *args):
         search_word = self.player.getControlValue('main','search_edit').strip()
@@ -277,7 +264,6 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
     def on_grid_click(self, page, listControl, item, itemControl):
         videoid = self.medias[item]['ids']
         url = self.apiurl + '?ac=videolist&ids=' + str(videoid)
-        print(url)
         self.onGetMediaPage(url)
         
     def onGetMediaPage(self,url):
@@ -306,7 +292,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
                                         jjinfo = jj.split('$')
                                         urllist.append({'title':jjinfo[0],'url':jjinfo[1]})
                                     sourcelist.append({'flag':playfromlist[i],'medias':urllist})
-                            mediainfo = {'name':info['vod_name'],'pic':info['vod_pic'],'actor':'演员:' + info['vod_actor'].strip(),'content':'简介:' + info['vod_content'].strip(),'source':sourcelist}
+                            mediainfo = {'medianame':info['vod_name'],'pic':info['vod_pic'],'actor':'演员:' + info['vod_actor'].strip(),'content':'简介:' + info['vod_content'].strip(),'source':sourcelist}
                             self.createMediaFrame(mediainfo)
                             return
                 else:
@@ -339,7 +325,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
                                         m3u8list.append({'title':urlinfo[0],'url':urlinfo[1]})
                                     n = n + 1
                                 sourcelist.append({'flag':ddflag,'medias':m3u8list})
-                        mediainfo = {'name':name,'pic':pic,'actor':actor,'content':des,'source':sourcelist}
+                        mediainfo = {'medianame':name,'pic':pic,'actor':actor,'content':des,'source':sourcelist}
                         self.createMediaFrame(mediainfo)
                         return
         except:
@@ -354,8 +340,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         actmovies = []
         if len(mediainfo['source']) > 0:
             actmovies = mediainfo['source'][0]['medias']
-        print(actmovies)
-        medianame = mediainfo['name']
+        medianame = mediainfo['medianame']
         self.allmovidesdata[medianame] = {'allmovies':mediainfo['source'],'actmovies':actmovies}
         xl_list_layout = {'type':'link','name':'flag','textColor':'#ff0000','width':0.6,'@click':'on_xl_click'}
         movie_list_layout = {'type':'link','name':'title','@click':'on_movieurl_click'}
@@ -364,6 +349,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
             {'group':[
                     {'type':'image','name':'mediapicture', 'value':mediainfo['pic'],'width':0.25},
                     {'group':[
+                            {'type':'label','name':'medianame','textColor':'#ff7f00','fontSize':15,'value':mediainfo['medianame'],'height':40},
                             {'type':'label','name':'actor','textColor':'#555500','value':mediainfo['actor'],'height':0.3},
                             {'type':'label','name':'info','textColor':'#005555','value':mediainfo['content'],'height':0.7}
                         ],
@@ -384,7 +370,9 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
                 'height':200
             }
         ]
-        self.doModal(mediainfo['name'],750,500,'',controls)   
+        result,control = self.doModal(mediainfo['medianame'],750,500,'',controls)
+        if result == False:
+            del self.allmovidesdata[medianame]
         
     def onClickFirstPage(self, *args):
         if self.firstpg == '':
@@ -434,7 +422,6 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
     def loading(self, stopLoading = False):
         if hasattr(self.player,'loadingAnimation'):
             self.player.loadingAnimation('main', stop=stopLoading)
-        print(self.max_page)
         
 def newPlugin(player:StellarPlayer.IStellarPlayer,*arg):
     plugin = dyxsplugin(player)
