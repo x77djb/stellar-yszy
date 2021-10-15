@@ -41,7 +41,16 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
             for file in files:
                 filenames = os.path.splitext(file)
                 if os.path.splitext(file)[1] == '.json':  # 想要保存的文件格式
-                    self.resolveJson(path + '\\' + file) 
+                    self.resolveJson(path + '\\' + file)
+        if len(self.spy) > 0:
+            cat = self.spy[0]
+            self.apiurl = cat['api']
+            self.apitype = cat['datatype']
+            self.getMediaType()
+            self.pg = ''
+            self.wd = ''
+            self.tid = ''
+            self.getMediaList()
         
         
     def resolveJson(self,file):
