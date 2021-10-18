@@ -58,7 +58,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
         fileJson = json.loads(file.read())
         for item in fileJson:
             self.spy.append(item)
-        
+        file.close()
     
     
     def show(self):
