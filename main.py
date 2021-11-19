@@ -11,7 +11,7 @@ import urllib3
 import os
 import sys
 
-class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
+class yszfplugin(StellarPlayer.IStellarPlayerPlugin):
     def __init__(self,player:StellarPlayer.IStellarPlayer):
         super().__init__(player)
         urllib3.disable_warnings()
@@ -422,7 +422,11 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
     def on_movieurl_click(self, page, listControl, item, itemControl):
         if len(self.allmovidesdata[page]['actmovies']) > item:
             playurl = self.allmovidesdata[page]['actmovies'][item]['url']
-            self.player.play(playurl)
+            playname = page + ' ' + self.allmovidesdata[page]['actmovies'][item]['title']
+            try:
+                self.player.play(playurl, caption=playname)
+            except:
+                self.player.play(playurl)  
             
     def playMovieUrl(self,playpageurl):
         return
@@ -432,7 +436,7 @@ class dyxsplugin(StellarPlayer.IStellarPlayerPlugin):
             self.player.loadingAnimation('main', stop=stopLoading)
         
 def newPlugin(player:StellarPlayer.IStellarPlayer,*arg):
-    plugin = dyxsplugin(player)
+    plugin = yszfplugin(player)
     return plugin
 
 def destroyPlugin(plugin:StellarPlayer.IStellarPlayerPlugin):
